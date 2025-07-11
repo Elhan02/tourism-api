@@ -25,6 +25,7 @@ public class TourRepository
                            u.Id AS GuideId, u.Username 
                     FROM Tours t 
                     INNER JOIN Users u ON t.GuideId = u.Id
+                    WHERE t.Status = 'objavljeno'
                     ORDER BY {orderBy} {orderDirection} LIMIT @PageSize OFFSET @Offset";
             using SqliteCommand command = new SqliteCommand(query, connection);
             command.Parameters.AddWithValue("@PageSize", pageSize);
@@ -82,7 +83,7 @@ public class TourRepository
             using SqliteConnection connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            string query = "SELECT COUNT(*) FROM Tours";
+            string query = "SELECT COUNT(*) FROM Tours WHERE Tours.Status = 'objavljeno'";
             using SqliteCommand command = new SqliteCommand(query, connection);
 
             return Convert.ToInt32(command.ExecuteScalar());
@@ -221,8 +222,8 @@ public class TourRepository
                         Name = reader["KeyPointName"].ToString(),
                         Description = reader["KeyPointDescription"].ToString(),
                         ImageUrl = reader["KeyPointImageUrl"].ToString(),
-                        Latitude = Convert.ToInt32(reader["Latitude"]),
-                        Longitude = Convert.ToInt32(reader["Longitude"]),
+                        Latitude = Convert.ToDouble(reader["Latitude"]),
+                        Longitude = Convert.ToDouble(reader["Longitude"]),
                         TourId = Convert.ToInt32(reader["Id"])
                     };
                     tour.KeyPoints.Add(keyPoint);
