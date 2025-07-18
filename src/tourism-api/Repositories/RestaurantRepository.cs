@@ -24,6 +24,7 @@ public class RestaurantRepository
                            u.Id AS OwnerId, u.Username
                     FROM Restaurants r
                     INNER JOIN Users u ON r.OwnerId = u.Id
+                    WHERE r.Status = 'objavljeno'
                     ORDER BY {orderBy} {orderDirection} LIMIT @PageSize OFFSET @Offset";
             using SqliteCommand command = new SqliteCommand(query, connection);
             command.Parameters.AddWithValue("@PageSize", pageSize);
@@ -84,7 +85,7 @@ public class RestaurantRepository
             using SqliteConnection connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            string query = "SELECT COUNT(*) FROM Restaurants";
+            string query = "SELECT COUNT(*) FROM Restaurants WHERE Status='objavljeno'";
             using SqliteCommand command = new SqliteCommand(query, connection);
 
             return Convert.ToInt32(command.ExecuteScalar());
