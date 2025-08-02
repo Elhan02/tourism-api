@@ -13,7 +13,6 @@ public class Restaurant
     public User? Owner { get; set; }
     public int OwnerId { get; set; }
     public List<Meal> Meals { get; set; } = new List<Meal>();
-    public List<RestaurantReservation>? Reservations { get; set; } = new List<RestaurantReservation>();
 
     public bool IsValid()
     {

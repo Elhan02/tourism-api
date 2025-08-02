@@ -6,7 +6,6 @@ using tourism_api.Repositories;
 
 namespace tourism_api.Controllers
 {
-    [Route("api/restaurants/reservations")]
     [ApiController]
     public class RestaurantReservationController : ControllerBase
     {
@@ -21,8 +20,8 @@ namespace tourism_api.Controllers
             _userRepository = new UserRepository(configuration);
         }
 
-        [HttpPost]
-        public ActionResult<RestaurantReservation> Create([FromBody] RestaurantReservation newReservation)
+        [HttpPost("api/restaurants/{restaurantId}/reservations")]
+        public ActionResult<RestaurantReservation> Create(int restaurantId, [FromBody] RestaurantReservation newReservation)
         {
             if (newReservation == null || !newReservation.isValid())
             {
@@ -31,11 +30,13 @@ namespace tourism_api.Controllers
 
             try
             {
-                Restaurant restaurant = _restaurantRepo.GetById(newReservation.RestaurantId);
+                Restaurant restaurant = _restaurantRepo.GetById(restaurantId);
                 if (restaurant == null)
                 {
-                    return NotFound($"Restaurant with ID {newReservation.RestaurantId} not found.");
+                    return NotFound($"Restaurant with ID {restaurantId} not found.");
                 }
+
+                newReservation.RestaurantId = restaurantId;
 
                 User tourist = _userRepository.GetById(newReservation.TouristId);
                 if (tourist == null)
@@ -43,6 +44,7 @@ namespace tourism_api.Controllers
                     return NotFound($"Tourist with ID {newReservation.TouristId} not found.");
                 }
 
+                
                 int reservedSeats = _restaurantReservationRepo.countReservedSeats(newReservation.RestaurantId, newReservation.MealType, newReservation.ReservationDate);
                 int availableSeats = restaurant.Capacity - reservedSeats;
 
@@ -64,8 +66,8 @@ namespace tourism_api.Controllers
 
         }
 
-        [HttpGet]
-        public ActionResult<List<RestaurantReservation>> GetAllTouristRestaurantsReservations([FromQuery] int touristId)
+        [HttpGet("api/reservations")]
+        public ActionResult<List<RestaurantReservation>> GetAllReservationsByTouristId([FromQuery] int touristId)
         {
             User tourist = _userRepository.GetById(touristId);
             if (tourist == null)
@@ -75,11 +77,7 @@ namespace tourism_api.Controllers
 
             try
             {
-                List<RestaurantReservation> reservations = _restaurantReservationRepo.GetAllTouristRestaurantsReservations(touristId);
-                foreach (RestaurantReservation reservation in reservations)
-                {
-                    reservation.Restaurant = _restaurantRepo.GetById(reservation.RestaurantId);
-                }
+                List<RestaurantReservation> reservations = _restaurantReservationRepo.GetAllReservationsByTouristId(touristId);
                 return Ok(reservations);
             }
             catch (Exception)
@@ -88,7 +86,7 @@ namespace tourism_api.Controllers
             }
         }
 
-        [HttpDelete("{reservationId}")]
+        [HttpDelete("api/reservations/{reservationId}")]
         public ActionResult DeleteReservation(int reservationId) 
         {
             try
@@ -126,7 +124,7 @@ namespace tourism_api.Controllers
                 {
                     return NotFound($"Reservation with ID: {reservationId} not found.");
                 }
-                return Ok("Reservation is cancelled.");
+                return Ok("Your reservation has been successfully canceled.");
 
             }
             catch (Exception)

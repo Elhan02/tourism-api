@@ -102,7 +102,7 @@ namespace tourism_api.Repositories
 
         }
 
-        public List<RestaurantReservation> GetAllTouristRestaurantsReservations(int touristId)
+        public List<RestaurantReservation> GetAllReservationsByTouristId(int touristId)
         {
 
             try
@@ -113,7 +113,7 @@ namespace tourism_api.Repositories
 
 
                 string query = @"
-                            SELECT r.Id as RestaurantId, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status, 
+                            SELECT r.Id as RestaurantId, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status, r.OwnerId,
                             rr.Id as ReservationId, rr.TouristId, rr.ReservationDate, rr.MealType, rr.NumberOfGuests, rr.RestaurantId
                             FROM Restaurants r
                             INNER JOIN RestaurantReservation rr on r.ID =  rr.RestaurantID
@@ -132,7 +132,20 @@ namespace tourism_api.Repositories
                         ReservationDate = Convert.ToDateTime(reader["ReservationDate"]),
                         MealType = Convert.ToString(reader["MealType"]),
                         NumberOfGuests = Convert.ToInt32(reader["NumberOfGuests"]),
-                        RestaurantId = Convert.ToInt32(reader["RestaurantId"])
+                        RestaurantId = Convert.ToInt32(reader["RestaurantId"]),
+                        Restaurant = new Restaurant
+                        {
+                            Id = Convert.ToInt32(reader["RestaurantId"]),
+                            Name = Convert.ToString(reader["Name"]),
+                            Description = Convert.ToString(reader["Description"]),
+                            Capacity = Convert.ToInt32(reader["Capacity"]),
+                            ImageUrl = Convert.ToString(reader["ImageUrl"]),
+                            Latitude = Convert.ToDouble(reader["Latitude"]),
+                            Longitude = Convert.ToDouble(reader["Longitude"]),
+                            Status = Convert.ToString(reader["Status"]),
+                            OwnerId = Convert.ToInt32(reader["OwnerId"])
+                        },
+                        
                     };
                     reservations.Add(reservation);
                 }
