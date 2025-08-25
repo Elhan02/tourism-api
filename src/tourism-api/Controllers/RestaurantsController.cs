@@ -20,7 +20,7 @@ public class RestaurantController : ControllerBase
     [HttpGet]
     public ActionResult<List<Restaurant>> GetPaged([FromQuery] int ownerId = 0, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string orderBy = "Name", [FromQuery] string orderDirection = "ASC")
     {
-        if(ownerId > 0)
+        if (ownerId > 0)
         {
             return Ok(_restaurantRepo.GetByOwner(ownerId));
         }
@@ -72,6 +72,7 @@ public class RestaurantController : ControllerBase
             return Problem("An error occurred while fetching the restaurant.");
         }
     }
+
 
     [HttpPost]
     public ActionResult<Restaurant> Create([FromBody] Restaurant newRestaurant)

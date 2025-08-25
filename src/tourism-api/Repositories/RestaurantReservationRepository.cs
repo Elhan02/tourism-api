@@ -11,7 +11,7 @@ namespace tourism_api.Repositories
 
         public RestaurantReservationRepository(IConfiguration configuration)
         {
-            _connectionString = configuration["ConnectionString:SQLiteConnection"];
+            this._connectionString = configuration["ConnectionString:SQLiteConnection"];
         }
 
         public RestaurantReservation Create(RestaurantReservation newReservation, int capacity)
@@ -228,8 +228,61 @@ namespace tourism_api.Repositories
             }
 
         }
+        public List<RestaurantReservation> GetAllTouristReservationsFromRestaurant(int restaurantId, int touristId) 
+        {
+            try
+            {
+                using SqliteConnection connection = new SqliteConnection(this._connectionString);
+                connection.Open();
 
-        public bool DeleteById(int reservationId)
+                string query = @"SELECT r.Id, r.TouristId, r.ReservationDate, r.MealType, r.NumberOfGuests, r.RestaurantId
+                            FROM RestaurantReservation r
+                            WHERE r.RestaurantId = @RestaurantId AND r.TouristId = @TouristId";
+
+                using SqliteCommand command = new SqliteCommand(query, connection);
+                command.Parameters.AddWithValue("@RestaurantId", restaurantId);
+                command.Parameters.AddWithValue("@TouristId", touristId);
+
+                using SqliteDataReader reader = command.ExecuteReader();
+                List<RestaurantReservation> restaurantReservations = new List<RestaurantReservation>();
+                while (reader.Read())
+                {
+                    RestaurantReservation restaurantReservation = new RestaurantReservation
+                    {
+                        Id = Convert.ToInt32(reader["Id"]),
+                        TouristId = Convert.ToInt32(reader["TouristId"]),
+                        ReservationDate = Convert.ToDateTime(reader["ReservationDate"]),
+                        MealType = Convert.ToString(reader["MealType"]),
+                        NumberOfGuests = Convert.ToInt32(reader["NumberOfGuests"]),
+                        RestaurantId = Convert.ToInt32(reader["RestaurantId"])
+                    };
+                    restaurantReservations.Add(restaurantReservation);
+                }
+                return restaurantReservations;
+            }
+            catch (SqliteException ex)
+            {
+                Console.WriteLine($"Greska pri konekciji ili pri izvrsavanju neisparvnih SQLite naredbi: {ex.Message}");
+                throw;
+            }
+            catch (FormatException ex)
+            {
+                Console.WriteLine($"Greska pri konvertovanju podataka iz baze: {ex.Message}");
+                throw;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Konekcija nije otvorena ili je otvorena vise puta: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Neocekivana greska: {ex.Message}");
+                throw;
+            }
+        }
+
+        public bool Delete(int reservationId)
         {
             try
             {

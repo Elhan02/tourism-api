@@ -44,7 +44,6 @@ namespace tourism_api.Controllers
                     return NotFound($"Tourist with ID {newReservation.TouristId} not found.");
                 }
 
-                
                 int reservedSeats = _restaurantReservationRepo.countReservedSeats(newReservation.RestaurantId, newReservation.MealType, newReservation.ReservationDate);
                 int availableSeats = restaurant.Capacity - reservedSeats;
 
@@ -119,7 +118,7 @@ namespace tourism_api.Controllers
                     }
                 }
 
-                bool deletedReservation = _restaurantReservationRepo.DeleteById(reservationId);
+                bool deletedReservation = _restaurantReservationRepo.Delete(reservationId);
                 if (!deletedReservation)
                 {
                     return NotFound($"Reservation with ID: {reservationId} not found.");

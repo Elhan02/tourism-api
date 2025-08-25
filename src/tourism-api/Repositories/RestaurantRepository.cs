@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
 using tourism_api.Domain;
 namespace tourism_api.Repositories;
 
@@ -49,10 +51,9 @@ public class RestaurantRepository
                     {
                         Id = Convert.ToInt32(reader["OwnerId"]),
                         Username = reader["Username"].ToString()
-                    }
+                    }   
                 });
             }
-
 
             return restaurants;
         }
@@ -146,8 +147,6 @@ public class RestaurantRepository
                     OwnerId = ownerId
                 });
             }
-
-
             return restaurants;
         }
         catch (SqliteException ex)
@@ -171,7 +170,6 @@ public class RestaurantRepository
             throw;
         }
     }
-
 
     public Restaurant GetById(int id)
     {
@@ -225,7 +223,7 @@ public class RestaurantRepository
                             Id = Convert.ToInt32(reader["MealId"]),
                             Order = Convert.ToInt32(reader["OrderPosition"]),
                             Name = reader["MealName"].ToString(),
-                            Price = Convert.ToDecimal(reader["Price"]),
+                            Price = Convert.ToDouble(reader["Price"]),
                             Ingredients = reader["Ingredients"].ToString(),
                             ImageUrl = reader["MealImageUrl"] != DBNull.Value ? reader["MealImageUrl"].ToString() : null,
                             RestaurantId = Convert.ToInt32(reader["Id"])
@@ -258,6 +256,7 @@ public class RestaurantRepository
             throw;
         }
     }
+
 
     public Restaurant Create(Restaurant restaurant)
     {
@@ -316,7 +315,7 @@ public class RestaurantRepository
             string query = @"
                     UPDATE Restaurants 
                     SET Name = @Name, Description = @Description, Capacity = @Capacity, ImageUrl = @ImageUrl,
-                        Latitude = @Latitude, Longitude = @Longitude, Status = @Status
+                        Latitude = @Latitude, Longitude = @Longitude, Status = @Status, AverageRating = @AverageRating
                     WHERE Id = @Id";
             using SqliteCommand command = new SqliteCommand(query, connection);
             command.Parameters.AddWithValue("@Id", restaurant.Id);
@@ -327,6 +326,7 @@ public class RestaurantRepository
             command.Parameters.AddWithValue("@Latitude", restaurant.Latitude);
             command.Parameters.AddWithValue("@Longitude", restaurant.Longitude);
             command.Parameters.AddWithValue("@Status", restaurant.Status);
+            command.Parameters.AddWithValue("@AverageRating", restaurant.AverageRating);
 
             int affectedRows = command.ExecuteNonQuery();
             return affectedRows > 0 ? restaurant : null;
