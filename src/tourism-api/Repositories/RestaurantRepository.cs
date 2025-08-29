@@ -22,7 +22,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @$"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status,
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status, r.AverageRating,
                            u.Id AS OwnerId, u.Username
                     FROM Restaurants r
                     INNER JOIN Users u ON r.OwnerId = u.Id
@@ -46,6 +46,8 @@ public class RestaurantRepository
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Status = reader["Status"].ToString(),
+                    
+                    AverageRating = reader["AverageRating"] != DBNull.Value ?  Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = Convert.ToInt32(reader["OwnerId"]),
                     Owner = new User
                     {
@@ -123,7 +125,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status, r.AverageRating
                     FROM Restaurants r
                     INNER JOIN Users u ON r.OwnerId = u.Id
                     WHERE r.OwnerId = @OwnerId";
@@ -144,6 +146,7 @@ public class RestaurantRepository
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Status = reader["Status"].ToString(),
+                    AverageRating = reader["AverageRating"]!=DBNull.Value ? Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = ownerId
                 });
             }
@@ -181,7 +184,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status,
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status, r.AverageRating,
                            u.Id AS OwnerId, u.Username,
                            m.Id AS MealId, m.OrderPosition, m.Name AS MealName, m.Price, m.Ingredients, m.ImageUrl AS MealImageUrl
                     FROM Restaurants r
@@ -205,6 +208,7 @@ public class RestaurantRepository
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Status = reader["Status"].ToString(),
+                    AverageRating = reader["AverageRating"]!= DBNull.Value ? Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = Convert.ToInt32(reader["OwnerId"]),
                     Owner = new User
                     {

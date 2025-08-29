@@ -85,6 +85,25 @@ namespace tourism_api.Controllers
             }
         }
 
+        [HttpGet("api/reservations/{reservationId}")]
+        public ActionResult<RestaurantReservation> GetById(int reservationId) 
+        {
+            try
+            {
+                RestaurantReservation reservation = _restaurantReservationRepo.GetById(reservationId);
+                if (reservation == null)
+                {
+                    return NotFound($"Reservation with Id: {reservationId} not found.");
+                }
+                return Ok(reservation);
+            }
+            catch (Exception)
+            {
+                return Problem("An error occured while fetching restaurant reservation.");
+            }
+            
+        }
+
         [HttpDelete("api/reservations/{reservationId}")]
         public ActionResult DeleteReservation(int reservationId) 
         {

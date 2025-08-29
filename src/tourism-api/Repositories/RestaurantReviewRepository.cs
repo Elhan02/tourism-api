@@ -20,16 +20,14 @@ namespace tourism_api.Repositories
                 using SqliteConnection connection = new SqliteConnection(this._connectionString);
                 connection.Open();
 
-                string queryString = @"INSERT INTO RestaurantReview(Review, Comment, DateOfReview, TouristId, RestaurantId)
-                                    VALUES(@Rating, @Comment, @DateOfReview, @TouristId, @RestaurantId); SELECT LAST_INSERT_ROWID()";
+                string queryString = @"INSERT INTO RestaurantReview(Rating, Comment, DateOfReview,TouristId, ReservationId)
+                                    VALUES(@Rating, @Comment, @DateOfReview, @TouristId, @ReservationId); SELECT LAST_INSERT_ROWID()";
                 using SqliteCommand command = new SqliteCommand(queryString, connection);
                 command.Parameters.AddWithValue("@Rating", restaurantReview.Rating);
                 command.Parameters.AddWithValue("@Comment", restaurantReview.Comment);
-                command.Parameters.AddWithValue("@TouristId", restaurantReview.TouristId);
                 command.Parameters.AddWithValue("@DateOfReview", restaurantReview.DateOfReview);
-
-
-                command.Parameters.AddWithValue("@RestaurantId", restaurantReview.ResturantId);
+                command.Parameters.AddWithValue("@TouristId", restaurantReview.TouristId);
+                command.Parameters.AddWithValue("@ReservationId", restaurantReview.ReservationId);
                 restaurantReview.Id = Convert.ToInt32(command.ExecuteScalar());
                 return restaurantReview;
             }
@@ -63,9 +61,10 @@ namespace tourism_api.Repositories
                 using SqliteConnection connection = new SqliteConnection(this._connectionString);
                 connection.Open();
 
-                string query = @"SELECT AVG(Rating) 
-                            FROM RestaurantReview
-                            WHERE RestaurantId = @RestaurantId;";
+                string query = @"SELECT AVG(Rating)
+                            FROM RestaurantReview r
+                            INNER JOIN RestaurantReservation res ON r.ReservationId = res.Id
+                            WHERE res.RestaurantId = @RestaurantId;";
 
                 using SqliteCommand command = new SqliteCommand(query, connection);
                 command.Parameters.AddWithValue("@RestaurantId", restaurantId);
@@ -102,9 +101,11 @@ namespace tourism_api.Repositories
                 using SqliteConnection connection = new SqliteConnection(this._connectionString);
                 connection.Open();
 
-                string query = @$"SELECT r.Id, r.Rating, r.Comment, r.DateOfReview, r.TouristId, r.RestaurantId
+                string query = @$"SELECT r.Id, r.Rating, r.Comment, r.DateOfReview, r.TouristId, r.ReservationId,
+                                res.Id as ReservationId, res.RestaurantId
                             FROM RestaurantReview r
-                            WHERE r.RestaurantId = @RestaurantId";
+                            LEFT JOIN RestaurantReservation res ON r.ReservationId = res.Id
+                            WHERE res.RestaurantId = @RestaurantId";
 
                 using SqliteCommand command = new SqliteCommand(query, connection);
                 command.Parameters.AddWithValue("@RestaurantId", restaurantId);
@@ -119,8 +120,7 @@ namespace tourism_api.Repositories
                         Rating = Convert.ToInt32(reader["Rating"]),
                         Comment = reader["Comment"].ToString(),
                         DateOfReview = Convert.ToDateTime(reader["DateOfReview"]),
-                        TouristId = Convert.ToInt32(reader["TouristId"]),
-                        ResturantId = Convert.ToInt32(reader["RestaurantId"])
+                        ReservationId = Convert.ToInt32(reader["ReservationId"])
                     };
                     reviews.Add(restaurantReview);
                 }
@@ -149,17 +149,22 @@ namespace tourism_api.Repositories
 
         }
 
-        public List<RestaurantReview> GetByRestaurantIdSorted(int restaurantId, string? orderBy)
+        public List<RestaurantReview> GetByRestaurantIdSorted(int restaurantId, string orderBy)
         {
             try
             {
                 using SqliteConnection connection = new SqliteConnection(this._connectionString);
                 connection.Open();
 
-                string query = @$"SELECT r.Id, r.Rating, r.Comment, r.DateOfReview, r.TouristId, r.RestaurantId
+                string query = @$"SELECT r.Id as ReviewId, r.Rating, r.Comment, r.DateOfReview, r.TouristId ,r.ReservationId as ReviewReservationId,
+                                    res.Id as ReservationId, res.RestaurantId,
+                                    u.Id as UserId, u.Username, u.Password, u.Role
                             FROM RestaurantReview r
-                            WHERE r.RestaurantId = @RestaurantId
+                            LEFT JOIN RestaurantReservation res ON r.ReservationId = res.Id
+                            LEFT JOIN Users u ON  res.TouristId = UserId
+                            WHERE res.RestaurantId = @RestaurantId
                             ORDER BY {orderBy}";
+
                 using SqliteCommand command = new SqliteCommand(query, connection);
                 command.Parameters.AddWithValue("@RestaurantId", restaurantId);
 
@@ -169,12 +174,18 @@ namespace tourism_api.Repositories
                 {
                     RestaurantReview restaurantReview = new RestaurantReview
                     {
-                        Id = Convert.ToInt32(reader["Id"]),
+                        Id = Convert.ToInt32(reader["ReviewId"]),
                         Rating = Convert.ToInt32(reader["Rating"]),
                         Comment = reader["Comment"].ToString(),
                         DateOfReview = Convert.ToDateTime(reader["DateOfReview"]),
-                        TouristId = Convert.ToInt32(reader["TouristId"]),
-                        ResturantId = Convert.ToInt32(reader["RestaurantId"])
+                        TouristId= Convert.ToInt32(reader["TouristId"]),
+                        ReservationId = Convert.ToInt32(reader["ReviewReservationId"]),
+                        Tourist = new User
+                        {
+                            Username = reader["Username"].ToString(),
+                            Password = reader["Password"].ToString(),
+                            Role = reader["Role"].ToString()
+                        }
                     };
                     reviews.Add(restaurantReview);
                 }

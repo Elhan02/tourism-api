@@ -9,6 +9,10 @@
         public int NumberOfGuests { get; set; }
         public int RestaurantId { get; set; }
         public Restaurant? Restaurant { get; set; }
+        public User? Tourist { get; set; }
+        public RestaurantReview? Review { get; set; }
+
+
         public bool isValid()
         {
             return NumberOfGuests >= 0 && ReservationDate > DateTime.Now && !string.IsNullOrWhiteSpace(MealType);

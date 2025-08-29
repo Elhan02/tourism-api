@@ -37,29 +37,26 @@ namespace tourism_api.Controllers
             {
                 return NotFound($"Restaurant with Id {restaurantId} not found.");
             }
-            restaurantReview.ResturantId = restaurantId;
 
-            User tourist = _userRepository.GetById(restaurantReview.TouristId);
-            if (tourist == null)
+            RestaurantReservation reservation = _reservationRepository.GetById(restaurantReview.ReservationId);
+            if (reservation == null)
             {
-                return NotFound($"Tourist with Id {restaurantReview.TouristId} not found.");
+                return NotFound($"Restaurant reservation with Id {restaurantReview.ReservationId} not found.");
             }
+
+            if (reservation.TouristId != restaurantReview.TouristId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, "This reservation does not belong to you.");
+            }
+
+            if (reservation.Review != null)
+            {
+                return Conflict("This reservation already has a review!");
+            }
+            
 
             try
             {
-                List<RestaurantReservation> reservations = _reservationRepository.GetAllTouristReservationsFromRestaurant(restaurantId, restaurantReview.TouristId);
-                List<RestaurantReview> restaurantReviews = _reviewRepository.GetAllByRestaurantId(restaurantId);
-
-                foreach (RestaurantReview review in restaurantReviews)
-                {
-                    if (restaurantReview.Equals(review))
-                    {
-                        return Conflict("Restaurant review exists.");
-                    }
-                }
-
-                foreach (RestaurantReservation reservation in reservations)
-                {
                     TimeSpan timeFromReservation = DateTime.Now - reservation.ReservationDate;
                     double hoursFromReservation = timeFromReservation.TotalHours;
 
@@ -70,11 +67,10 @@ namespace tourism_api.Controllers
                         _restaurantRepository.Update(restaurant);
                         return Ok(createdRestaurantReview);
                     }
-                }
 
                 return BadRequest("Rating not allowed: must be 1–72 hours after reservation time.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
                 return Problem("An error occured wihle creating review.");
@@ -82,7 +78,7 @@ namespace tourism_api.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<RestaurantReview>> GetByRestaurantIdSorted(int restaurantId, [FromQuery] string orderBy) 
+        public ActionResult<List<RestaurantReview>> GetByRestaurantIdSorted(int restaurantId, [FromQuery] string orderBy = "DateOfReview") 
         {
             Restaurant restaurant = _restaurantRepository.GetById(restaurantId);
             if (restaurant == null)
