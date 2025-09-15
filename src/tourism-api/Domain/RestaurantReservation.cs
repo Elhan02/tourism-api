@@ -4,14 +4,14 @@
     {
         public int Id { get; set; }
         public int TouristId { get; set; }
-
         public DateTime ReservationDate { get; set; }
-
         public string MealType { get; set; }
         public int NumberOfGuests { get; set; }
         public int RestaurantId { get; set; }
-
         public Restaurant? Restaurant { get; set; }
+        public User? Tourist { get; set; }
+        public RestaurantReview? Review { get; set; }
+
 
         public bool isValid()
         {

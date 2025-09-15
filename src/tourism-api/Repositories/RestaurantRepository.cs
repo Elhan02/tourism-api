@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
 using tourism_api.Domain;
 namespace tourism_api.Repositories;
 
@@ -20,7 +22,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @$"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status,
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Latitude, r.Longitude, r.Status, r.AverageRating,
                            u.Id AS OwnerId, u.Username
                     FROM Restaurants r
                     INNER JOIN Users u ON r.OwnerId = u.Id
@@ -44,15 +46,16 @@ public class RestaurantRepository
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Status = reader["Status"].ToString(),
+                    
+                    AverageRating = reader["AverageRating"] != DBNull.Value ?  Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = Convert.ToInt32(reader["OwnerId"]),
                     Owner = new User
                     {
                         Id = Convert.ToInt32(reader["OwnerId"]),
                         Username = reader["Username"].ToString()
-                    }
+                    }   
                 });
             }
-
 
             return restaurants;
         }
@@ -122,7 +125,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status, r.AverageRating
                     FROM Restaurants r
                     INNER JOIN Users u ON r.OwnerId = u.Id
                     WHERE r.OwnerId = @OwnerId";
@@ -143,11 +146,10 @@ public class RestaurantRepository
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Status = reader["Status"].ToString(),
+                    AverageRating = reader["AverageRating"]!=DBNull.Value ? Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = ownerId
                 });
             }
-
-
             return restaurants;
         }
         catch (SqliteException ex)
@@ -172,7 +174,6 @@ public class RestaurantRepository
         }
     }
 
-
     public Restaurant GetById(int id)
     {
         Restaurant restaurant = null;
@@ -183,7 +184,7 @@ public class RestaurantRepository
             connection.Open();
 
             string query = @"
-                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status,
+                    SELECT r.Id, r.Name, r.Description, r.Capacity, r.ImageUrl, r.Longitude, r.Latitude, r.Status, r.AverageRating,
                            u.Id AS OwnerId, u.Username,
                            m.Id AS MealId, m.OrderPosition, m.Name AS MealName, m.Price, m.Ingredients, m.ImageUrl AS MealImageUrl
                     FROM Restaurants r
@@ -207,6 +208,7 @@ public class RestaurantRepository
                     Longitude = Convert.ToDouble(reader["Longitude"]),
                     Latitude = Convert.ToDouble(reader["Latitude"]),
                     Status = reader["Status"].ToString(),
+                    AverageRating = reader["AverageRating"]!= DBNull.Value ? Convert.ToDouble(reader["AverageRating"]):0,
                     OwnerId = Convert.ToInt32(reader["OwnerId"]),
                     Owner = new User
                     {
@@ -225,7 +227,7 @@ public class RestaurantRepository
                             Id = Convert.ToInt32(reader["MealId"]),
                             Order = Convert.ToInt32(reader["OrderPosition"]),
                             Name = reader["MealName"].ToString(),
-                            Price = Convert.ToDecimal(reader["Price"]),
+                            Price = Convert.ToDouble(reader["Price"]),
                             Ingredients = reader["Ingredients"].ToString(),
                             ImageUrl = reader["MealImageUrl"] != DBNull.Value ? reader["MealImageUrl"].ToString() : null,
                             RestaurantId = Convert.ToInt32(reader["Id"])
@@ -258,6 +260,7 @@ public class RestaurantRepository
             throw;
         }
     }
+
 
     public Restaurant Create(Restaurant restaurant)
     {
@@ -316,7 +319,7 @@ public class RestaurantRepository
             string query = @"
                     UPDATE Restaurants 
                     SET Name = @Name, Description = @Description, Capacity = @Capacity, ImageUrl = @ImageUrl,
-                        Latitude = @Latitude, Longitude = @Longitude, Status = @Status
+                        Latitude = @Latitude, Longitude = @Longitude, Status = @Status, AverageRating = @AverageRating
                     WHERE Id = @Id";
             using SqliteCommand command = new SqliteCommand(query, connection);
             command.Parameters.AddWithValue("@Id", restaurant.Id);
@@ -327,6 +330,7 @@ public class RestaurantRepository
             command.Parameters.AddWithValue("@Latitude", restaurant.Latitude);
             command.Parameters.AddWithValue("@Longitude", restaurant.Longitude);
             command.Parameters.AddWithValue("@Status", restaurant.Status);
+            command.Parameters.AddWithValue("@AverageRating", restaurant.AverageRating);
 
             int affectedRows = command.ExecuteNonQuery();
             return affectedRows > 0 ? restaurant : null;

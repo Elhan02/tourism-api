@@ -13,6 +13,8 @@ public class Restaurant
     public User? Owner { get; set; }
     public int OwnerId { get; set; }
     public List<Meal> Meals { get; set; } = new List<Meal>();
+    public double AverageRating { get; set; }
+    public List<RestaurantReview> RestaurantReviews { get; set; } = new List<RestaurantReview>();
 
     public bool IsValid()
     {

@@ -44,7 +44,6 @@ namespace tourism_api.Controllers
                     return NotFound($"Tourist with ID {newReservation.TouristId} not found.");
                 }
 
-                
                 int reservedSeats = _restaurantReservationRepo.countReservedSeats(newReservation.RestaurantId, newReservation.MealType, newReservation.ReservationDate);
                 int availableSeats = restaurant.Capacity - reservedSeats;
 
@@ -86,6 +85,25 @@ namespace tourism_api.Controllers
             }
         }
 
+        [HttpGet("api/reservations/{reservationId}")]
+        public ActionResult<RestaurantReservation> GetById(int reservationId) 
+        {
+            try
+            {
+                RestaurantReservation reservation = _restaurantReservationRepo.GetById(reservationId);
+                if (reservation == null)
+                {
+                    return NotFound($"Reservation with Id: {reservationId} not found.");
+                }
+                return Ok(reservation);
+            }
+            catch (Exception)
+            {
+                return Problem("An error occured while fetching restaurant reservation.");
+            }
+            
+        }
+
         [HttpDelete("api/reservations/{reservationId}")]
         public ActionResult DeleteReservation(int reservationId) 
         {
@@ -119,7 +137,7 @@ namespace tourism_api.Controllers
                     }
                 }
 
-                bool deletedReservation = _restaurantReservationRepo.DeleteById(reservationId);
+                bool deletedReservation = _restaurantReservationRepo.Delete(reservationId);
                 if (!deletedReservation)
                 {
                     return NotFound($"Reservation with ID: {reservationId} not found.");
